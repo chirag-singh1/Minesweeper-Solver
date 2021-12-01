@@ -15,6 +15,7 @@ using namespace std;
 Action* act;
 Board* b;
 
+//Cleanup for Ctrl+C exit of program
 void signal_handler(int signum) {
 	cout << "Interrupt signal received, cleaning up" << endl;
 
@@ -31,6 +32,7 @@ void signal_handler(int signum) {
 	exit(0);
 }
 
+//Parse coordinates for manual move
 bool parse_coords(std::string in, Action* act) {
 	int count = 0;
 	std::string str_1("");
@@ -53,12 +55,37 @@ bool parse_coords(std::string in, Action* act) {
 	}
 	act->type = USER_DEFINED_MOVE;
 	pair<int, int>* p = new pair<int, int>;
-	p->first = stoi(str_1);
-	p->second = stoi(str_2);
+	try {
+		p->first = stoi(str_1);
+		p->second = stoi(str_2);
+	}
+	catch (std::exception e) {
+		return false;
+	}
 	act->info = p;
 	return true;
 }
 
+//Parse integer for simulation
+int parse_int(std::string in) {
+	try {
+		int start_pos = in.find("simulate");
+		if (start_pos != in.length()) {
+			in.replace(start_pos, strlen("simulate"), "");
+		}
+		else {
+			in.replace(in.find('s'), strlen("simulate"), "");
+		}
+		cout << in << endl;
+		return stoi(in);
+	}
+	catch (std::exception e) {
+		cout << "Invalid input" << endl;
+		return -1;
+	}
+}
+
+//Convert user input into action
 bool parse_input(std::string in, Action* act) {
 	if (act->info != nullptr) {
 		delete act->info;
@@ -82,7 +109,18 @@ bool parse_input(std::string in, Action* act) {
 		act->info = nullptr;
 		return true;
 	}
-	if (in == "s" || in == "stats") {
+	if (in[0] == 's' || in.find("simulate") != 0) {
+		act->type = SIMULATE;
+		int* num = new int;
+		*num = parse_int(in);
+		if (*num == -1) {
+			delete num;
+			return false;
+		}
+		act->info = num;
+		return true;
+	}
+	if (in == "i" || in == "info") {
 		act->type = PRINT_COUNTS;
 		act->info = nullptr;
 		return true;
@@ -90,6 +128,7 @@ bool parse_input(std::string in, Action* act) {
 	return false;
 }
 
+//Set value from string
 void set_value(char* arg, int &val) {
 	try {
 		std::string s = arg;
@@ -101,9 +140,12 @@ void set_value(char* arg, int &val) {
 	}
 }
 
+//Main method
 int main(int argc, char** argv)
 {
-	signal(SIGINT, signal_handler);
+	signal(SIGINT, signal_handler); //Attach signal handler
+	
+	//Parse arguments
 	int rows=9;
 	int cols=9;
 	int mines=10;
@@ -155,8 +197,9 @@ int main(int argc, char** argv)
 				cout << "\tnext (n, enter): Play the next best move" << endl;
 				cout << "\treset (r): Start a new game" << endl;
 				cout << "\tquit (q): Close the program" << endl;
-				cout << "\tstats (s): View relevant stats" << endl;
-				cout << "\t[int] [int]: Make the move manually at the specified square" << endl;
+				cout << "\tinfo (i): View relevant stats" << endl;
+				cout << "\tsimulate [int] (s): Simulate several games in order" << endl;
+				cout << "\t[int] [int]: Make a move manually at the specified square" << endl;
 				return 0;
 			}
 			else if (strchr(argv[i], 'x') != NULL || strchr(argv[i], 'X') != NULL) {
@@ -182,6 +225,7 @@ int main(int argc, char** argv)
 		}
 	}
 
+	//Initialize board
 	if (subset_approximation) {
 		cout << "Initializing board with " << rows << " rows, " << cols << " columns, " << mines << " mines, maximum edge size of " << max_edge_size << " and subset approximation enabled" << endl;
 	}
@@ -198,6 +242,7 @@ int main(int argc, char** argv)
 	b->get_bot()->set_edge_search_limit(max_edge_size);
 	b->get_bot()->set_edge_subset_approximation(subset_approximation);
 		
+	//Main gameplay loop
 	std::string user_in;
 	act = new Action;
 	act->info = nullptr;
@@ -213,6 +258,8 @@ int main(int argc, char** argv)
 			cout << "Invalid input, try inputting \"help\" for help" << endl;
 		}
 	}
+
+	//Cleanup
 	if (act->info != nullptr) {
 		delete act->info;
 	}
