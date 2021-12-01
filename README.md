@@ -53,4 +53,27 @@ In the example below, the constraints (1,3) and (3,2) both border only one unkno
 ### Edge Search
 For most games, a single-square search will eventually stop making progress (and will no longer be able to identify guaranteed safe squares or mines). Once this occurs, we must turn to a more comprehensive search. While checking each possibility for the distribution of the remaining mines would allow for the precise calculation of the probability of a mine on each square, the number of possibilities to check increases with the factorial of the number of remaining squares and is generally impractical. Instead, we check each possibility for each edge under a certain maximum size. While the number of possibilities for each edge will grow exponentially with the size of the edge, for small edges, it is still a valuable tool to identify potentially beneficial moves, especially on small boards. 
 
+#### Identifying Edges
+To generate the possibilities for each edge, each edge first must be identified. To do so, for each square on the board:
+```
+1. If the square is unknown and has not been visited, push it to a search queue
+2. While the search queue is not empty:
+  a. Pop the top element from the queue
+  b. If the top element from the queue has not been visited, get all surrounding known squares
+    i. If there are surrounding known squares, push the unknown squares surrounding each known square to the search queue
+    ii. Mark each known square as visited
+    iii. Insert the current square to the current edge
+  c. Mark the current square as visited
+3. Append the current edge to the list of edges 
+4. Mark the current square as visited
+```
+
+This algorithm will run in linear time. 
+
+#### Checking Possibilties
+Possibilities are checked and generated simultaneously by iterating over the integers from 0 to 2^n-1, where n is the length of the edge. Bitwise shifts are used to determine whether each edge square is a mine. Then, iterate over each edge square, decrementing a temporary count for each constraint. The possibility is valid if each temporary count is 0 after decrementing this count. Early stopping can be used to slightly improve the performance of this checking process. Counting the number of possibilities and the number of times each edge square is a mine provides a probability for each edge square to be a mine. In most cases, this will generate a number of safe and guaranteed unsafe squares, creating several moves to safely queue. However, even when there are no safe moves known, this process still provides valuable information. First, we determine the probability that each edge square is a mine, providing a valuable resource for potentially guessing highly likely safe squares. 
+
 ### Sub-Edge Search
+
+### Potential Improvements
+
