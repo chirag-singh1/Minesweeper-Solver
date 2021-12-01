@@ -37,7 +37,7 @@ Maximal sub-edge: For a given n, a maximal sub-edge S of an edge E is a sub-edge
 
 Coordinate system: All squares are 0-indexed with the first coordinate indicating the row (increasing from top to bottom) and the second coordinate indicating the column (increasing from left to right)
 
-## Optimizations
+## Strategy
 
 ### Single Square Search
 Often, the constraints on any given square are enough to guarantee that a square is a mine or not. In such cases, which often arise along large edges that would be expensive to search, searching for the constraints on a single square can quickly produce a significant queue of safe moves. Even when no safe moves can be identified, identifying and marking mines is an important step to support future edge searches. Because the single square search runs in linear time, the low cost of searching for safe and unsafe squares decreases the frequency of more expensive searches.
@@ -71,9 +71,23 @@ To generate the possibilities for each edge, each edge first must be identified.
 This algorithm will run in linear time. 
 
 #### Checking Possibilties
-Possibilities are checked and generated simultaneously by iterating over the integers from 0 to 2^n-1, where n is the length of the edge. Bitwise shifts are used to determine whether each edge square is a mine. Then, iterate over each edge square, decrementing a temporary count for each constraint. The possibility is valid if each temporary count is 0 after decrementing this count. Early stopping can be used to slightly improve the performance of this checking process. Counting the number of possibilities and the number of times each edge square is a mine provides a probability for each edge square to be a mine. In most cases, this will generate a number of safe and guaranteed unsafe squares, creating several moves to safely queue. However, even when there are no safe moves known, this process still provides valuable information. First, we determine the probability that each edge square is a mine, providing a valuable resource for potentially guessing highly likely safe squares. We also determine an estimated value for the number of mines in the edge, which can be used to calculate the probability that any non-edge square is a mine. 
+Possibilities are checked and generated simultaneously by iterating over the integers from 0 to 2^n-1, where n is the length of the edge. Bitwise shifts are used to determine whether each edge square is a mine. Then, iterate over each edge square, decrementing a temporary count for each constraint. The possibility is valid if each temporary count is 0 after decrementing this count. Early stopping can be used to slightly improve the performance of this checking process. Counting the number of possibilities and the number of times each edge square is a mine provides a probability for each edge square to be a mine. In most cases, this will generate a number of safe and guaranteed unsafe squares, creating several moves to safely queue. However, even when there are no safe moves known, this process still provides valuable information. First, we determine the probability that each edge square is a mine, providing a valuable resource for potentially guessing highly likely safe squares. We also determine an estimated value for the number of mines in the edge, which can be used to calculate the probability that any non-edge square is a mine. However, as valuable as this algorithm is, its runtime increases with n* 2^n, and is therefore only suitable for small edges. 
+
+#### Example
+In the example below, there is not enough information for a single square search to identify a safe square or mine. As a result, a search is run on the edge surrounding the known squares. 4 possibilities are found for this edge, telling us that the square (2,2) is a guaranteed mine, while the other 5 squares have a 50% chance of being a mine. This allows us to safely mark the mine on (2,2), while also giving an estimate of the number of mines in the edge. With this estimate, we calculate that there is a 90.5797% chance that any non-edge square in the grid is safe, leading to the safe move of (0,4).  
+
+<p align="center">
+  <img width="541" height="517" src="https://user-images.githubusercontent.com/66097224/144331658-9bfee38d-da6a-42e0-b3a9-666881cf71d6.png">
+</p>
 
 ### Sub-Edge Search
+When an edge grows too large to search through brute force, we turn to the sub-edge search. For this search, we check the possiblities for each maximal sub-edge for a maximum length and edge, which limits the number of possibilities to be searched. 
+
+#### Checking Possibilities
+The algorithm for checking the possibilities for each sub-edge is the same as for the brute-force edge search, with a few slight difference. First, because the size of each maximal sub-edge cannot grow, the time to check each sub-edge does not grow with edge size. Therefore, the time to check all possibilities of an edge with a sub-edge search grows linearly with the number of maximal sub-edges, which grows linearly with the edge size on average, producing an average linear time. Second, checking the possibilities of a maximal sub-edge produces the question of how to reconcile the probabilities of each sub-edge into an overall probability for the edge. When an edge square is only in one maximal sub-edge, the probability can simply be taken as-is, as there are no other constraints affecting it. Likewise, when an edge square is either guaranteed safe or known to be a mine from one maximal sub-edge, this is true for any sub-edge. However, for edges in multiple sub-edges with a non-guaranteed state, the geometric mean of each sub-edge probability appears an effective approximation of the probability for these squares. While this is not precise or optimal, it generally performs well enough, as there is generally either some guarantee or enough flags in the edge for a non-edge square to be more probable than any edge square. 
+
+### Guessing
+Once all available searches have been exhausted with no safe moves, a guess must be made. The obvious choice for a guess would be the likeliest safe square, which is chosen. However, if multiple squares have the same likelihood of being safe, the tiebreaker is the proximity of a square to the sides of the board. Squares closest to the sides of the board have the least information about them available (as the sides of the board do not provide any constraints), and are therefore the most likely to eventually create situations that require guessing. While this heuristic has not been rigorously proven to improve results, it does (anecdotally and through simulation) appear to improve success rates. 
 
 ### Potential Improvements
 
