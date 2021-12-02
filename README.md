@@ -16,6 +16,9 @@ Run `rm -rf build` to remove the build folder.
 # About
 
 ## Introduction
+At its core, Minesweeper is a game about probability. Each move should give a player the strongest chance at winning the game, either by avoiding mines in the short term, or by revealing the most possible information for the long term. As a result, the problem of generating the safest move is one that almost all minesweeper players have asked.   
+
+Because the problem of generating the optimal move in Minesweeper is NP-complete, any perfect Minesweeeper solving algorithm will require exponential time, struggling on larger boards. Thus, a multi-tiered strategy of approaching Minesweeper is the only way to reliably solve any position in reasonable time. This strategy relies on single-square searches, exponential time precise searches for appropriate situations, and approximations of those exponential time searches in others. The overall strategy runs in quadratic time in most cases, performing relatively well on even large boards. 
 
 ## Definitions
 
