@@ -109,3 +109,11 @@ Once all available searches have been exhausted with no safe moves, a guess must
 
 ### Potential Improvements
 
+#### Backtracking Edge Possibility Generation
+Instead of generating all possible edge possibilities, use a backtracking algorithm to dynamically place mines along the edge, checking each constraint during this process. Each possibility for each edge square would be considered in a tree, with bad possibilities causing a backtracking to the last valid state. This would avoid some of the repeated work done in checking similar possibilities, but would still have exponential worst case time. The average case time would likely improve significantly by a scalar factor even if the time complexity does not improve. 
+
+#### Bad Possibility Caching
+Storing a cache of the bad parts of bad possibilities where checking terminated early could help to save some time when checking future possibilities. It would take time linear with the edge size to check each possibility against the cache of bad possibilities using a hash-table implemented set. This would not improve the time complexity of generating and checking possibilities, but would likely improve the overall time by a large scalar complexity. 
+
+#### Lookahead
+In certain situations, a guess with a higher probability of being a mine may provide a higher probability of winning the game if it generates a position guaranteed to remove any future guesses from the current edge (while safer moves in the short-term may require more guessing in the future). By only choosing the higher probability move, the current method for guessing in unsafe situations does not support this tradeoff. However, with the exponential complexity of both possibilities in the short term and in the long term, looking ahead likely is not practical in any reasonable time. 
