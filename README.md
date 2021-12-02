@@ -120,3 +120,9 @@ Storing a cache of the bad parts of bad possibilities where checking terminated 
 
 #### Lookahead
 In certain situations, a guess with a higher probability of being a mine may provide a higher probability of winning the game if it generates a position guaranteed to remove any future guesses from the current edge (while safer moves in the short-term may require more guessing in the future). By only choosing the higher probability move, the current method for guessing in unsafe situations does not support this tradeoff. However, with the exponential complexity of both possibilities in the short term and in the long term, looking ahead likely is not practical in any reasonable time. 
+
+#### Parallelization
+
+Checking possibilities presents a textbook case for parallelism. Because there is no data dependence between each possibility check, possibilties can be checked in parallel and because the total number of possibilities is known before checking them, work can be divided evenly, ensuring no wasted time. Even better, maintaining a count for each individual thread would remove overhead of a critical section and would massively improve the time to check possibilities. While it would not improve the time complexity, parallelism could significantly improve the performance of checking possibilities, raising the appropriate value of the edge size limit.
+
+Building the sub-edge tree can also be parallelized by using a different thread for each root node and splitting each tree into a separate queue.
